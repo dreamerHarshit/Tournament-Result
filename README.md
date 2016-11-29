@@ -1,3 +1,5 @@
+##Tournament Databse Schema 
+
 This is a database schema to store matches between players in a Swiss style tournament .
 
 #Modules included-
