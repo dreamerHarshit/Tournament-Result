@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# 
+#!/usr/bin/env python 
 # tournament.py -- implementation of a Swiss-system tournament
 #
 
@@ -52,11 +51,11 @@ def registerPlayer(name):
     db, cursor = connect()
     query = "INSERT INTO Players VALUES(%s);"
     parameter = (name,)
-    cursor.execute(query,parameter)
+    cursor.execute(query, parameter)
     db.commit()
     db.close()
     
-    
+   
 def playerStandings():
     """Returns a list of the players and their win records, sorted by wins.
     The first entry in the list should be the player in first place, or a player
@@ -69,10 +68,16 @@ def playerStandings():
         matches: the number of matches the player has played
     """
     db, cursor = connect()
-    cursor.execute("SELECT id, name, wins, matches FROM playersBywins")
-    players = cursor.fetchall()
+    query = """SELECT Players.id, Players.name, View_wins.win,View_match.matches 
+               FROM Players LEFT JOIN View_wins WHERE Players.Id = View_wins.player
+               LEFT JOIN View_match WHERE Players.Id = View_match.matches
+               GROUP BY Players.Id, Players.name, View_wins.win, View_match.matches 
+               ORDER BY View_wins.win DESC;
+             """
+    cursor.execute(query)
+    standings = cursor.fetchall()
     db.close()
-    return players
+    return standings
 
 
 def reportMatch(winner, looser):
@@ -84,14 +89,14 @@ def reportMatch(winner, looser):
     db, cursor = connect()
     #adding match to match table
     cursor.execute("INSERT INTO Matches VALUES(%s, %s)", (winner, looser))
-    cursor.execute("UPDATE players SET matches = matches + 1 ")
-    #adding one point in win and increasing one match
-    #cursor.execute("UPDATE Matches SET winner = wins + 1,matches = matches + 1 WHERE id=%s", (winner,)) 
-    #for looser only number of matches will increase
-    #cursor.execute("UPDATE Players SET matches=matches+1 WHERE id=%s",(looser,))
     db.commit()
     db.close()
- 
+
+def ListIntoGroups(list, size=2):
+    size = max(1, size)
+    return [list[i:i + size] for i in range(0, len(list), size)]
+
+
 def swissPairings():
     """Returns a list of pairs of players for the next round of a match.
     Assuming that there are an even number of players registered, each player
@@ -105,12 +110,14 @@ def swissPairings():
         id2: the second player's unique id
         name2: the second player's name
     """
-    db, cursor = connect()
-    cursor.execute("SELECT * FROM playresBywins")
-    players = cursor.fetchall()
-    pairings = []
-    for player1, player2 in zip(*[iter(players)]*2):
-        match = (player1[id], player1[name], player2[id], player2[name])
-        pairings.append(match)
-    db.close()
-    return pairings
+    standings = playerStandings()
+    group = ListIntoGroup(standings,2)
+    matched_pair = []
+    
+    for pair in group:
+        pairing = []
+        for p in pair:
+            pairing.append(p[0])
+            pairing.append(p[1])
+        matched_pair.append(pairing)
+    return matched_pair

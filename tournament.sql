@@ -17,8 +17,6 @@ CREATE DATABASE tournament;
 CREATE TABLE Players
 (
    name text,
-   wins int Default 0,
-   matches int Default 0,
    id serial primary Key
 );
 
@@ -32,5 +30,21 @@ CREATE Table Matches
 ); 
 
 -- view used to make selecting players by wins concise
-CREATE VIEW playersByWins AS
-	SELECT * FROM Players ORDER BY wins DESC;
+CREATE VIEW View_wins AS
+	SELECT Players.id AS player, count(matches.winner) AS win FROM players, 
+	Matches WHERE Players.id = Matches.winner GROUP BY Players.id,
+	Matches.winner ORDER BY win;
+	
+
+CREATE VIEW View_lose AS
+      SELECT Players.id AS player, count(matches.looser)	As losses From Players, 
+      Matches WHERE Players.id = Matches.looser GROUP BY Players.id,
+      Matches.looser ORDER BY losses;
+       
+
+CREATE VIEW View_match AS
+      SELECT Players.id AS player, count(Matches) AS matches From Players, Matches
+      WHERE(Players.id = Matches.winner) OR(Players.id = Matches.looser)
+      GROUP BY Players.id ORDER BY Players.id ASC;
+                
+      
