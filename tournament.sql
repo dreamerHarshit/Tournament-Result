@@ -11,22 +11,24 @@ DROP DATABASE IF EXISTS Tournament;
 CREATE DATABASE tournament;
 
 \c tournament;
+
 -- players table
+
 CREATE TABLE Players
 (
    playerName text,
    wins int Default 0,
    matches int Default 0,
-   playerId serial primary Key
+   id serial primary Key
 );
 
 --table for all matches
 
 CREATE Table Matches
 (
-   matchId serial primary key,
-   winner int foreign key references Players(playerId),
-   looser int foreign key references Players(playerId)
+   id serial primary key,
+   winner INTEGER REFERENCES Players(id),
+   looser INTEGER REFERENCES Players(id)
 ); 
 
 -- view used to make selecting players by wins concise

@@ -9,60 +9,58 @@ import bleach
 
 def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
-    return psycopg2.connect("dbname=tournament")
+    try:
+        db = psycopg2.connect("dbname=tournament")
+        cursor = db.cursor()
+        return db, cursor
+    except:
+        print("<error message>")
 
 
 def deleteMatches():
-   """Remove all the match records from the database."""
-   con = connect()
-   c = con.cursor()
-   c.execute("DELETE FROM Matches")
-   con.commit()
-   con.close()
+    """Remove all the match records from the database."""
+    db, cursor = connect()
+    cursor.execute("TRUNCATE Matches")
+    db.commit()
+    db.close()
 
 
 def deletePlayers():
-   """Remove all the player records from the database."""
-   con = connect()
-   c = con.cursor()
-   c.execute("DELETE FROM Players")
-   con.commit()
-   con.close()
+    """Remove all the player records from the database."""
+    db, cursor = connect()
+    cursor.execute("DELETE FROM Players")
+    db.commit()
+    db.close()
 
 
 def countPlayers():
-   """Returns the number of players currently registered."""
-   con = connect()
-   c = con.cursor()
-   c.execute("SELECT count(*) FROM Players")
-   count = c.fetchall()[0][0]
-   con.close()
-   return count
+    """Returns the number of players currently registered."""
+    db, cursor = connect()
+    cursor.execute("SELECT count(*) FROM Players")
+    count = cursor.fetchall()[0][0]
+    db.close()
+    return count
 
 
 def registerPlayer(name):
     """Adds a player to the tournament database.
-  
     The database assigns a unique serial id number for the player.  (This
     should be handled by your SQL database schema, not in your Python code.)
-  
-    Args:
+  Args:
       name: the player's full name (need not be unique).
     """
-    playerName = bleach.clean(playerName)
-    con = connect()
-    c = con.cursor()
-    c.execute("INSERT INTO Players VALUES(%s)",(name,))
-    con.commit()
-    con.close()
+    db, cursor = connect()
+    query = "INSERT INTO Players VALUES(%s);"
+    parameter = (name,)
+    cursor.execute(query,parameter)
+    db.commit()
+    db.close()
     
     
 def playerStandings():
     """Returns a list of the players and their win records, sorted by wins.
-
     The first entry in the list should be the player in first place, or a player
     tied for first place if there is currently a tie.
-
     Returns:
       A list of tuples, each of which contains (id, name, wins, matches):
         id: the player's unique id (assigned by the database)
@@ -70,42 +68,35 @@ def playerStandings():
         wins: the number of matches the player has won
         matches: the number of matches the player has played
     """
-    con=connect()
-    c=con.cursor()
-    c.execute("SELECT playerId, name, wins, matches FROM playersBywins")
-    players = c.fetchall()
-    con.close()
+    db, cursor = connect()
+    cursor.execute("SELECT id, playerName, wins, matches FROM playersBywins")
+    players = cursor.fetchall()
+    db.close()
     return players
 
 
-def reportMatch(winner, loser):
+def reportMatch(winner, looser):
     """Records the outcome of a single match between two players.
-
     Args:
       winner:  the id number of the player who won
       loser:  the id number of the player who lost
     """
-    winner = bleach.clean(winner)
-    loser = bleach.clean(loser)
-    con = connect()
-    c=con.cursor()
+    db, cursor = connect()
     #adding match to match table
-    c.execute("INSERT INTO Matches (%s, %s)",(winner,loser,))
+    cursor.execute("INSERT INTO Matches VALUES(%s, %s)", (winner, looser))
     #adding one point in win and increasing one match
-    c.execute("UPDATE Players SET wins = wins + 1, matches = matches + 1 WHERE playerId=%s",(winner,)) 
+    cursor.execute("UPDATE Players SET wins = wins + 1,matches = matches + 1 WHERE id=%s", (winner,)) 
     #for looser only number of matches will increase
-    c.execute("UPDATE Players SET matches=matches+1 WHERE playerId=%s",(looser,))
-    con.commit()
-    con.close()
+    cursor.execute("UPDATE Players SET matches=matches+1 WHERE id=%s",(looser,))
+    db.commit()
+    db.close()
  
 def swissPairings():
     """Returns a list of pairs of players for the next round of a match.
-  
     Assuming that there are an even number of players registered, each player
     appears exactly once in the pairings.  Each player is paired with another
     player with an equal or nearly-equal win record, that is, a player adjacent
-    to him or her in the standings.
-  
+    to him or her in the standings. 
     Returns:
       A list of tuples, each of which contains (id1, name1, id2, name2)
         id1: the first player's unique id
@@ -113,17 +104,12 @@ def swissPairings():
         id2: the second player's unique id
         name2: the second player's name
     """
-    con = connect()
-    c=con.cursor()
-    c.execute("SELECT * FROM playresBywins")
-    players = c.fetchall()
+    db, cursor = connect()
+    cursor.execute("SELECT * FROM playresBywins")
+    players = cursor.fetchall()
     pairings = []
     for player1, player2 in zip(*[iter(players)]*2):
         match = (player1[id], player1[name], player2[id], player2[name])
         pairings.append(match)
-    con.close()
+    db.close()
     return pairings
-
-
-
-
