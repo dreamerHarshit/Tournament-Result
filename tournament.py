@@ -84,10 +84,11 @@ def reportMatch(winner, looser):
     db, cursor = connect()
     #adding match to match table
     cursor.execute("INSERT INTO Matches VALUES(%s, %s)", (winner, looser))
+    cursor.execute("UPDATE players SET matches = matches + 1 ")
     #adding one point in win and increasing one match
-    cursor.execute("UPDATE Players SET wins = wins + 1,matches = matches + 1 WHERE id=%s", (winner,)) 
+    #cursor.execute("UPDATE Matches SET winner = wins + 1,matches = matches + 1 WHERE id=%s", (winner,)) 
     #for looser only number of matches will increase
-    cursor.execute("UPDATE Players SET matches=matches+1 WHERE id=%s",(looser,))
+    #cursor.execute("UPDATE Players SET matches=matches+1 WHERE id=%s",(looser,))
     db.commit()
     db.close()
  
