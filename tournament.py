@@ -69,7 +69,7 @@ def playerStandings():
         matches: the number of matches the player has played
     """
     db, cursor = connect()
-    cursor.execute("SELECT id, playerName, wins, matches FROM playersBywins")
+    cursor.execute("SELECT id, name, wins, matches FROM playersBywins")
     players = cursor.fetchall()
     db.close()
     return players

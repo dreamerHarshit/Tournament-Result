@@ -16,7 +16,7 @@ CREATE DATABASE tournament;
 
 CREATE TABLE Players
 (
-   playerName text,
+   name text,
    wins int Default 0,
    matches int Default 0,
    id serial primary Key
