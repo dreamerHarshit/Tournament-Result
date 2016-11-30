@@ -68,12 +68,7 @@ def playerStandings():
         matches: the number of matches the player has played
     """
     db, cursor = connect()
-    query = """SELECT Players.id, Players.name, View_wins.win,View_match.matches 
-               FROM Players LEFT JOIN View_wins WHERE Players.Id = View_wins.player
-               LEFT JOIN View_match WHERE Players.Id = View_match.matches
-               GROUP BY Players.Id, Players.name, View_wins.win, View_match.matches 
-               ORDER BY View_wins.win DESC;
-             """
+    query = "SELECT * FROM standings_view"
     cursor.execute(query)
     standings = cursor.fetchall()
     db.close()
@@ -88,7 +83,7 @@ def reportMatch(winner, looser):
     """
     db, cursor = connect()
     #adding match to match table
-    cursor.execute("INSERT INTO Matches VALUES(%s, %s)", (winner, looser))
+    cursor.execute("INSERT INTO Matches(winner,looser) VALUES(%s, %s)", (winner, looser))
     db.commit()
     db.close()
 
@@ -111,7 +106,7 @@ def swissPairings():
         name2: the second player's name
     """
     standings = playerStandings()
-    group = ListIntoGroup(standings,2)
+    group = ListIntoGroups(standings,2)
     matched_pair = []
     
     for pair in group:

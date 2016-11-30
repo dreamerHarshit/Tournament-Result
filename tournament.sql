@@ -30,21 +30,20 @@ CREATE Table Matches
 ); 
 
 -- view used to make selecting players by wins concise
-CREATE VIEW View_wins AS
-	SELECT Players.id AS player, count(matches.winner) AS win FROM players, 
-	Matches WHERE Players.id = Matches.winner GROUP BY Players.id,
-	Matches.winner ORDER BY win;
-	
-
-CREATE VIEW View_lose AS
-      SELECT Players.id AS player, count(matches.looser)	As losses From Players, 
-      Matches WHERE Players.id = Matches.looser GROUP BY Players.id,
-      Matches.looser ORDER BY losses;
-       
-
-CREATE VIEW View_match AS
-      SELECT Players.id AS player, count(Matches) AS matches From Players, Matches
-      WHERE(Players.id = Matches.winner) OR(Players.id = Matches.looser)
-      GROUP BY Players.id ORDER BY Players.id ASC;
-                
+CREATE VIEW standings_view AS
+SELECT p1_count.id as pid,name,wins.count_wins as wins, (p1_count.n_matches + p2_count.n_matches) as matches
+    FROM
+    (SELECT Players.id, NAME,COUNT(winner) as n_matches
+        FROM Players left join Matches on Players.id = Matches.winner
+        GROUP BY Players.id) AS p1_count
+    left join
+    (SELECT Players.id,COUNT(looser) as n_matches
+        FROM Players left join Matches on Players.id = Matches.looser
+        GROUP BY Players.id) AS p2_count
+    on p1_count.id = p2_count.id left join
+    (SELECT Players.id as id,COUNT(winner) as count_wins
+        FROM Players left join Matches on Players.id = Matches.winner
+        GROUP BY players.id) AS wins
+    on p2_count.id = wins.id
+    ORDER BY wins DESC,p1_count.id;                
       
